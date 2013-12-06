@@ -46,6 +46,7 @@
     <Compile Include="Canonical.cs" />
     <Compile Include="CubicSpline.cs" />
     <Compile Include="Interpolation.cs" />
+    <Compile Include="Lagange2.cs" />
     <Compile Include="Lagrange.cs" />
     <Compile Include="Matrix.cs" />
     <Compile Include="Newton.cs" />
