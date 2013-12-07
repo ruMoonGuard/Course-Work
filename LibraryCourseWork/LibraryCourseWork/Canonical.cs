@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibraryCourseWork
 {
-    class Canonical : Interpolation
+    public class Canonical : Interpolation
     {
         private int n;
         public Canonical(double[] x, double[] y)
