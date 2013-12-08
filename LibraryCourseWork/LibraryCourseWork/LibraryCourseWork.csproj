@@ -52,6 +52,7 @@
     <Compile Include="Newton.cs" />
     <Compile Include="PaintGraph.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rational.cs" />
     <Compile Include="Trigonometric.cs" />
   </ItemGroup>
   <ItemGroup>
