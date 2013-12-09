@@ -1,17 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LibraryCourseWork 
 {
+	public class Point 
+	{
+		public Point(double x, double y) {
+			X = x;
+			Y = y;
+		}
+
+		public double X {
+			get;
+			set;
+		}
+
+		public double Y {
+			get;
+			set;
+		}
+	}
+
+	public interface IMatrixDataObserver {
+
+		void onDataChanged();
+
+	}
+
 	public class Matrix 
 	{
 		public double[,] data;
 		public static int z_iters = 0;
 		public static Matrix nev;
 		public static Matrix XRes;
+
+		private IMatrixDataObserver observer;
+		public IMatrixDataObserver Observer {
+			get {
+				return observer;
+			}
+			set {
+				observer = value;
+			}
+		}
 
 		public double this[int i, int j] 
 		{
@@ -86,7 +121,7 @@ namespace LibraryCourseWork
 		/// <summary>
 		/// Adds another column to matrix
 		/// </summary>
-		public void addColumn() 
+		public void ColumnInsert() 
 		{
 			double[,] tmp = new double[data.GetLength(0), data.GetLength(1) + 1];
 			for (int i = 0; i < data.GetLength(0); i++) 
@@ -95,6 +130,45 @@ namespace LibraryCourseWork
 					tmp[i, j] = data[i, j];
 			}
 			data = tmp;
+		}
+
+		/// <summary>
+		/// Add another line to matrix
+		/// </summary>
+		public void LineInsert() 
+		{
+			double[,] tmp = new double[data.GetLength(0)+1, data.GetLength(1)];
+			for (int i = 0; i < data.GetLength(0); i++) {
+				for (int j = 0; j < data.GetLength(1); j++)
+					tmp[i, j] = data[i, j];
+			}
+			data = tmp;
+
+			if (observer != null) {
+				observer.onDataChanged();
+			}
+		}
+
+		/// <summary>
+		/// Add another line to matrix after index
+		/// </summary>
+		/// <param name="index"></param>
+		public void LineInsert(int index) 
+		{
+			double[,] tmp = new double[data.GetLength(0) + 1, data.GetLength(1)];
+			int add = 0;
+			for (int i = 0; i < data.GetLength(0); i++) {
+				for (int j = 0; j < data.GetLength(1); j++)
+					tmp[i+add, j] = data[i, j];
+				if (i == index) {
+					add = 1;
+				}
+			}
+			data = tmp;
+
+			if (observer != null) {
+				observer.onDataChanged();
+			}
 		}
 
 		/// <summary>
@@ -170,6 +244,8 @@ namespace LibraryCourseWork
 		/// <returns>one column as double[]</returns>
 		public double[] GetColumn(int j) {
 			double[] tmp = new double[LinesCount()];
+			if (data.GetLength(1) < j)
+				return tmp;
 			for (int i = 0; i < LinesCount(); i++) {
 				tmp[i] = data[i, j];
 			}
@@ -304,6 +380,73 @@ namespace LibraryCourseWork
 		public double[,] GetData()
 		{
 			return data;
+		}
+
+		public Point[] GetAsPointsArray() 
+		{
+			List<Point> res = new List<Point>();
+			if (data.GetLength(1) >= 2)
+				for (int i = 0; i < data.GetLength(0); i++)
+				{
+					res.Add(new Point(data[i, 0], data[i, 1]));
+				}
+			return res.ToArray<Point>();
+		}
+
+		public void LoadFromFile(string fileName) {
+			//TODO: implement method
+			DebugOutput("pref");
+			data = new double[0, 0];
+			var reader = new StreamReader(File.OpenRead(fileName));
+			var RowCount = 0;
+			int currIndex = 0;
+			while (!reader.EndOfStream) {
+				var line = reader.ReadLine();
+				var values = line.Split(';');
+				if (0 == RowCount) 
+				{
+					RowCount = values.Count();
+					for (int i = 0; i < RowCount; i++)
+						ColumnInsert();
+				}
+				if (values.Count() == RowCount) {
+					LineInsert();
+					for (int j = 0; j < RowCount; j++) {
+						data[currIndex, j] = Convert.ToDouble(values[j]);
+					}
+					currIndex++;
+				}
+			}
+			DebugOutput("pref");
+
+			if (observer != null) {
+				observer.onDataChanged();
+			}
+		}
+
+		public void LineRemove(int index) 
+		{
+			if (LinesCount() <= 0)
+				return;
+			double[,] tmp = new double[data.GetLength(0)-1,data.GetLength(1)];
+			int add = 0;
+			for (int i = 0; i < data.GetLength(0); i++) 
+			{
+				if (i == index) 
+				{
+					add = 1;
+					continue;
+				}
+				for (int j = 0; j < data.GetLength(1); j++) 
+				{
+					tmp[i - add, j] = data[i, j];
+				}
+			}
+			data = tmp;
+
+			if (observer != null) {
+				observer.onDataChanged();
+			}
 		}
 	}
 }

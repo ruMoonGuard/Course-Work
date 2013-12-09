@@ -23,6 +23,7 @@ namespace LibraryCourseWork
                 _x[i] = x[i];
                 _y[i] = y[i];
             }
+			name = "Каноническая";
         }
 
         public override double Calc(double arg)
