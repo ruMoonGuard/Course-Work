@@ -12,72 +12,148 @@ using System.Windows.Forms.DataVisualization.Charting;
 
 namespace CWCM
 {
-    public partial class FormMain : Form
+	public partial class FormMain : Form, IMatrixDataObserver
     {
-        /*
-         *Объявляем переменные для классов 
-         */
-        /*---------------------------------------------*/
-        Lagrange lg;
-        Newton nw;
-        CubicSpline cs;
-        Trigonometric tr;
-        Canonical can;
-        /*---------------------------------------------*/
-        int count;//Кол-во графиков
+		Interpolation[] interpolations;
         
-        /*Исходные точки*/
-        double[] x = {1,2,3,4};
-        double[] y = {1,2,3,4};
+		/*Исходные точки*/
+		Matrix sourceData = new Matrix(new double[,]{{1,1}, {2,2}, {3,2}, {4,4}, {5,1}});
+		
+
+		int[] widthArr = new int[]{738, 970};
+		string[] widthAddArr = new string[] { ">", "<" };
+		bool expandedWindow = false;
 
         public FormMain()
         { 
             InitializeComponent();
+			sourceData.Observer = this;
+			onSourceDataChanged();
+			RefreshInterpolation();
+			AddInterpolatorsToChart();
+			AddInterpolatorsToList();
+			chartMain.Update();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            //При загрузки формы инициализируем наш счетчик и удаляем все дефолтные сериесы с чарта.
-            count = 0;
-            chartMain.Series.Clear();
-        }
-        /// <summary>
-        /// Функция, которая рисует график
-        /// </summary>
-        /// <param name="x">Набор точек</param>
-        /// <param name="cr">Указатель на компонент, на котором рисуем</param>
-        /// <param name="obj">Объект определенной интерполяции</param>
-        private void PaintGraph(double[] x, Chart cr, Interpolation obj)
-        {
-            if (!checkBoxClear.Checked)
-            {
-                cr.Series.Clear();
-                count = 0;
-            }
-            
-            //cr.Series.Add(new Series(""
-            cr.Series[count].Name = obj.name;
+		public void RefreshInterpolation() 
+		{
+			double[] x = sourceData.GetColumn(0);
+			double[] y = sourceData.GetColumn(1);
+			interpolations = new Interpolation[5];
+			interpolations[0] = new Canonical(x, y);
+			interpolations[1] = new Lagrange(x, y);
+			interpolations[2] = new Newton(x, y);
+			interpolations[3] = new CubicSpline(x, y);
+			interpolations[4] = new Trigonometric(x, y, sourceData.LinesCount()-1);
+		}
 
-        }
+		public void AddInterpolatorsToChart() 
+		{
+			chartMain.Series.Clear();
+			chartMain.Series.Add(new Series("Исходные точки"));
+			chartMain.Series[0].ChartType = SeriesChartType.Point;
+			for (int i = 0; i < sourceData.LinesCount(); i++) 
+			{
+				chartMain.Series[0].Points.AddXY(sourceData[i, 0], sourceData[i, 1]);
+			}
 
-        private void buttonDataGrid_Click(object sender, EventArgs e)
-        { 
-            /*--------------------------------------------------------*/
-            //Вот тут кароче будет загрузка всех данных в файл
-            int n = 4;//Пока заглушка, в будущем будет содержать кол-во узлов(точек).
-            ///x = {1,2,3,4};
-            //y = new double[n];
-            //x = 
-            //y = {1,2,3,4};
-            /*--------------------------------------------------------*/
-            
-            chartMain.Series.Add(new Series("Исходные точки"));
-            chartMain.Series[0].ChartType = SeriesChartType.Point;
-            chartMain.Series[0].Color = Color.Black;
-            for (int i = 0; i < n; i++)
-            {
-                chartMain.Series[0].Points.AddXY(x[i], y[i]);
-            }
-        }
+			for (int i = 0; i < interpolations.Count(); i++) 
+			{
+				string name = interpolations[i].name;
+				Series s = new Series(name);
+				s.ChartType = SeriesChartType.Line;
+				s.Enabled = true;
+				double minX = sourceData[0,0];
+				double maxX = sourceData[sourceData.LinesCount()-1,0];
+				double delta = (maxX - minX) / 100.0;
+				for (double x = minX; x <= maxX; x += delta) 
+				{
+					double y = interpolations[i].Calc(x);
+					s.Points.AddXY(x, y);
+				}
+
+				chartMain.Series.Add(s);
+			}
+		}
+
+		public void AddInterpolatorsToList() 
+		{
+			clbInterpolators.Items.Clear();
+			for (int i = 0; i < interpolations.Count(); i++) 
+			{
+				clbInterpolators.Items.Add(interpolations[i].name,true);
+			}
+		}
+
+		public void onDataChanged() 
+		{
+			onSourceDataChanged();
+			//RefreshInterpolation();
+			//AddInterpolatorsToChart();
+		}
+
+		private void onSourceDataChanged() 
+		{
+			dgvSourceData.DataSource = sourceData.GetAsPointsArray();
+		}
+
+		private void buttonLoadSourceFromFile_Click(object sender, EventArgs e) {
+			OpenFileDialog dialog = new OpenFileDialog();
+			dialog.ShowDialog();
+			sourceData.LoadFromFile(dialog.FileName);
+			RefreshInterpolation();
+			AddInterpolatorsToChart();
+		}
+
+		private void clbInterpolators_ItemCheck(object sender, ItemCheckEventArgs e) {
+			chartMain.Series[e.Index + 1].Enabled = (e.NewValue == CheckState.Checked);
+		}
+
+		private void buttonUpdateChart_Click(object sender, EventArgs e) {
+			RefreshInterpolation();
+			AddInterpolatorsToChart();
+		}
+
+		private void dgvSourceData_CellEndEdit(object sender, DataGridViewCellEventArgs e) {
+			sourceData[e.RowIndex, e.ColumnIndex] = (double) dgvSourceData.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+			RefreshInterpolation();
+			AddInterpolatorsToChart();
+		}
+
+		private void buttonShowTable_Click(object sender, EventArgs e) {
+			expandedWindow = !expandedWindow;
+			this.Width = (widthArr[Convert.ToInt32(expandedWindow)]);
+			this.buttonShowTable.Text = "Таблица значений " + widthAddArr[Convert.ToInt32(expandedWindow)];
+		}
+
+		private void dgvSourceData_KeyDown(object sender, KeyEventArgs e) {
+
+			int rowIndex = 0;
+			if (dgvSourceData.CurrentRow != null)
+				rowIndex = dgvSourceData.CurrentRow.Index;
+
+			if (e.KeyCode == Keys.Delete) 
+			{
+				if (dgvSourceData.CurrentRow != null) {
+					sourceData.LineRemove(dgvSourceData.CurrentRow.Index);
+				}
+			}
+
+			if (e.KeyCode == Keys.Enter) {
+				if (dgvSourceData.CurrentRow != null) {
+					if (e.Modifiers == Keys.Control && dgvSourceData.CurrentRow.Index > 0)
+						sourceData.LineInsert(dgvSourceData.CurrentRow.Index - 1);
+					else {
+						sourceData.LineInsert(dgvSourceData.CurrentRow.Index);
+					}
+					dgvSourceData.CurrentCell = dgvSourceData.Rows[rowIndex].Cells[0];
+				} else {
+					sourceData.LineInsert();
+				}
+
+			}
+		}
+
+		
     }
 }
