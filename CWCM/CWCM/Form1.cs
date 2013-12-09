@@ -39,12 +39,13 @@ namespace CWCM
 		{
 			double[] x = sourceData.GetColumn(0);
 			double[] y = sourceData.GetColumn(1);
-			interpolations = new Interpolation[5];
+			interpolations = new Interpolation[6];
 			interpolations[0] = new Canonical(x, y);
 			interpolations[1] = new Lagrange(x, y);
 			interpolations[2] = new Newton(x, y);
 			interpolations[3] = new CubicSpline(x, y);
 			interpolations[4] = new Trigonometric(x, y, sourceData.LinesCount()-1);
+            interpolations[5] = new Rational(x, y, 7);
 		}
 
 		public void AddInterpolatorsToChart() 
