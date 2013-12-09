@@ -91,6 +91,7 @@ namespace LibraryCourseWork
             // Normalize
             //
             //barycentricnormalize(b); wtf? Oo
+            name = "Рациональная";
 
         }
 
