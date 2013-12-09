@@ -48,7 +48,7 @@ namespace LibraryCourseWork
 				_x[i] = x[i];
 				_y[i] = y[i];
 			}
-			name = "Тригонометрическая интерполяция";
+			name = "Тригонометрическая";
 			_L = L;
 			_coeff = FourierCoeffs();
 			a = GetEvenCoefs();
@@ -80,7 +80,7 @@ namespace LibraryCourseWork
 			int m = n / 2;
 			double[] xx = new double[(n - (m + 1)) + m];
 			double[] yy = new double[(n - (m + 1)) + m];
-			double[,] A = new double[m*2, n-1];
+			double[,] A = new double[m*2, n];
 
 			for (int i = 0; i < (n - m - 1); i++) 
 			{
