@@ -137,7 +137,7 @@ namespace LibraryCourseWork
 		/// </summary>
 		public void LineInsert() 
 		{
-			double[,] tmp = new double[data.GetLength(0)+1, data.GetLength(1)];
+			double[,] tmp = new double[data.GetLength(0) + 1, data.GetLength(1)];
 			for (int i = 0; i < data.GetLength(0); i++) {
 				for (int j = 0; j < data.GetLength(1); j++)
 					tmp[i, j] = data[i, j];

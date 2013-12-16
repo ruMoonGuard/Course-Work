@@ -43,16 +43,17 @@ namespace LibraryCourseWork
 					"Размер массива точек и размер массива значений в этих точках должны совпадать!");
 			_x = new double[x.Length];
 			_y = new double[y.Length];
-			for (int i = 0; i < x.Length; i++) 
-			{
-				_x[i] = x[i];
-				_y[i] = y[i];
+			if ((_x.Length % 2) != 0) {//если кол-во точек четно - не делаем ничего
+				for (int i = 0; i < x.Length; i++) {
+					_x[i] = x[i];
+					_y[i] = y[i];
+				}
+				name = "Тригонометрическая";
+				_L = L;
+				_coeff = FourierCoeffs();
+				a = GetEvenCoefs();
+				b = GetOddCoefs();
 			}
-			name = "Тригонометрическая";
-			_L = L;
-			_coeff = FourierCoeffs();
-			a = GetEvenCoefs();
-			b = GetOddCoefs();
 		}
 
 		private double[] GetOddCoefs() {
@@ -116,16 +117,19 @@ namespace LibraryCourseWork
 
 		public override double Calc(double arg) 
 		{
-			int n = _x.Length;
-			int m = n / 2;
-			double xInt = arg;
-			double yInt = 0.5 * a[0];
-			for (int i = 0; i < m - 1; i++) 
-			{
-				yInt += a[i + 1] * Math.Cos(2 * Math.PI * (i + 1) * xInt / _L) + b[i + 1] * Math.Sin(2 * Math.PI * (i + 1) * xInt / _L);
+			if ((_x.Length % 2) != 0) {
+				int n = _x.Length;
+				int m = n / 2;
+				double xInt = arg;
+				double yInt = 0.5 * a[0];
+				for (int i = 0; i < m - 1; i++) {
+					yInt += a[i + 1] * Math.Cos(2 * Math.PI * (i + 1) * xInt / _L) + b[i + 1] * Math.Sin(2 * Math.PI * (i + 1) * xInt / _L);
+				}
+				yInt += a[m] * Math.Cos(2 * Math.PI * m * xInt / _L);
+				return yInt;
+			} else {
+				return 0;
 			}
-			yInt += a[m] * Math.Cos(2 * Math.PI * m * xInt / _L);
-			return yInt;
 		}
 	}
 }
