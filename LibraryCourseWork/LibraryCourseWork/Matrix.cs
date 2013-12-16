@@ -37,6 +37,8 @@ namespace LibraryCourseWork
 		public static int z_iters = 0;
 		public static Matrix nev;
 		public static Matrix XRes;
+		public double max = Double.MinValue;
+		public double min = Double.MaxValue;
 
 		private IMatrixDataObserver observer;
 		public IMatrixDataObserver Observer {
@@ -56,6 +58,10 @@ namespace LibraryCourseWork
 			}
 			set 
 			{
+				if (value < min)
+					min = value;
+				if (value > max)
+					max = value;
 				data[i,j] = value;
 			}
 		}
