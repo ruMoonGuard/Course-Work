@@ -155,6 +155,10 @@ namespace CWCM
 			}
 		}
 
+		private void лагранжToolStripMenuItem_Click(object sender, EventArgs e) {
+			new Form2().Show();
+		}
+
 		
     }
 }
